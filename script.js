@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('vehicle_type', document.getElementById('vehicle_type').value);
         formData.append('vehicle_category', document.getElementById('vehicle_category').value);
         formData.append('coverage_type', document.getElementById('coverage_type').value);
-        formData.append('coverage_zones', document.getElementById('coverage_zones').value);
         formData.append('industry', document.getElementById('industry').value);
         formData.append('brand_name', document.getElementById('brand_name').value);
         formData.append('main_text', document.getElementById('main_text').value);

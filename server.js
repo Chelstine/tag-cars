@@ -73,11 +73,40 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
 app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
     try {
         const {
-            vehicle_type, coverage_zones, vehicle_category, coverage_type,
+            vehicle_type, vehicle_category, coverage_type,
             industry, brand_name, main_text, key_info, style, primary_colors, constraints
         } = req.body;
         const logoFile = req.file;
         const vehicle_view = 'Vue 3/4 avant';
+
+        const KIE_API_KEY = process.env.KIE_API_KEY;
+        const API_BASE_URL = 'https://api.kie.ai/api/v1/gpt4o-image';
+
+        if (!KIE_API_KEY || KIE_API_KEY.trim() === '') {
+            console.warn("No KIE_API_KEY found (or empty). Switching to MOCK MODE.");
+            const mockImages = [
+                "https://placehold.co/1024x768/000000/d4af37?text=Design+Prop+1",
+                "https://placehold.co/1024x768/1a1a1a/ffffff?text=Design+Prop+2",
+                "https://placehold.co/1024x768/333333/d4af37?text=Design+Prop+3"
+            ];
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return res.json({ success: true, images: mockImages });
+        }
+
+        // Upload logo BEFORE building prompt so logoUrl is available
+        let logoUrl = null;
+        let logoUploadError = null;
+        if (logoFile) {
+            try {
+                logoUrl = await uploadLogoToKie(logoFile.buffer, logoFile.originalname, KIE_API_KEY);
+                console.log(`[LOGO] SUCCESS - URL: ${logoUrl}`);
+            } catch (uploadErr) {
+                logoUploadError = uploadErr.message;
+                console.error('[LOGO] FAILED:', uploadErr.message);
+            }
+        } else {
+            console.log('[LOGO] No logo file received from form');
+        }
 
         // Construct the ultra-precise prompt
         const prompt = `
@@ -96,7 +125,6 @@ Le vehicule doit etre montre EN ENTIER depuis cette vue exacte, sur un fond neut
 
 === TYPE DE RECOUVREMENT ===
 Type : ${coverage_type}
-Zones a couvrir : ${coverage_zones || 'Selon le type de recouvrement choisi'}
 - Si "Full cover" : tout le vehicule est recouvert (sauf vitres).
 - Si "Semi-cover" : certaines zones restent dans la couleur d'origine.
 - Si "Marquage simple" : lettrage et elements graphiques uniquement, pas de fond colore.
@@ -129,35 +157,6 @@ Regles supplementaires : Pas de details trop fins non imprimables. Pas de texte 
 `;
 
         console.log("Generated Prompt:", prompt);
-
-        const KIE_API_KEY = process.env.KIE_API_KEY;
-        const API_BASE_URL = 'https://api.kie.ai/api/v1/gpt4o-image';
-
-        if (!KIE_API_KEY || KIE_API_KEY.trim() === '') {
-            console.warn("No KIE_API_KEY found (or empty). Switching to MOCK MODE.");
-            const mockImages = [
-                "https://placehold.co/1024x768/000000/d4af37?text=Design+Prop+1",
-                "https://placehold.co/1024x768/1a1a1a/ffffff?text=Design+Prop+2",
-                "https://placehold.co/1024x768/333333/d4af37?text=Design+Prop+3"
-            ];
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            return res.json({ success: true, images: mockImages });
-        }
-
-        // Upload logo if provided
-        let logoUrl = null;
-        let logoUploadError = null;
-        if (logoFile) {
-            try {
-                logoUrl = await uploadLogoToKie(logoFile.buffer, logoFile.originalname, KIE_API_KEY);
-                console.log(`[LOGO] SUCCESS - URL: ${logoUrl}`);
-            } catch (uploadErr) {
-                logoUploadError = uploadErr.message;
-                console.error('[LOGO] FAILED:', uploadErr.message);
-            }
-        } else {
-            console.log('[LOGO] No logo file received from form');
-        }
 
         // Send generation request
         console.log(`Sending request to Kie.ai (${API_BASE_URL})...`);
