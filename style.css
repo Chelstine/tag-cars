@@ -241,17 +241,16 @@ select {
 
 button[type="submit"] {
     position: relative;
-    background: #000;
-    /* Black button for contrast in light mode */
-    color: #fff;
+    background: var(--accent-color);
+    color: #000;
     border: none;
     padding: 18px 50px;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: 30px;
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.2s, background 0.2s;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
     font-family: var(--font-body);
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -259,8 +258,8 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     transform: translateY(-2px);
-    background: #222;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    background: #c9a032;
+    box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);
 }
 
 .btn-shine {

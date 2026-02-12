@@ -2,23 +2,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('designForm');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const generateBtn = document.getElementById('generateBtn');
-    const resultSection = document.getElementById('resultSection');
-    const imageGrid = document.getElementById('imageGrid');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // UI Updates
+        
         generateBtn.classList.add('hidden');
         loadingIndicator.classList.remove('hidden');
-        resultSection.classList.add('hidden');
-        imageGrid.innerHTML = '';
 
-        // Collect Form Data as FormData (to support file upload)
         const formData = new FormData();
         formData.append('vehicle_type', document.getElementById('vehicle_type').value);
         formData.append('vehicle_category', document.getElementById('vehicle_category').value);
-        formData.append('vehicle_view', document.getElementById('vehicle_view').value);
         formData.append('coverage_type', document.getElementById('coverage_type').value);
         formData.append('coverage_zones', document.getElementById('coverage_zones').value);
         formData.append('industry', document.getElementById('industry').value);
@@ -29,14 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('primary_colors', document.getElementById('primary_colors').value);
         formData.append('constraints', document.getElementById('constraints').value);
 
-        // Append logo file if selected
         const logoInput = document.getElementById('logo_file');
         if (logoInput.files.length > 0) {
             formData.append('logo_file', logoInput.files[0]);
         }
 
         try {
-            // Send to Backend (FormData, no Content-Type header - browser sets it with boundary)
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 body: formData
@@ -48,19 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || 'Erreur lors de la génération');
             }
 
-            // Display Results
             if (data.images && data.images.length > 0) {
-                data.images.forEach((imageUrl, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'result-card';
-                    card.innerHTML = `
-                        <img src="${imageUrl}" alt="Design Proposal ${index + 1}">
-                    `;
-                    imageGrid.appendChild(card);
-                });
-                resultSection.classList.remove('hidden');
-
-                resultSection.scrollIntoView({ behavior: 'smooth' });
+                sessionStorage.setItem('generatedImages', JSON.stringify(data.images));
+                window.location.href = 'results.html';
             } else {
                 alert('Aucune image générée. Vérifiez la console.');
             }

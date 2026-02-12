@@ -29,11 +29,11 @@
                     <div class="grid-2">
                         <div class="input-group">
                             <label for="vehicle_type">Modèle du Véhicule</label>
-                            <input type="text" id="vehicle_type" placeholder="Ex: Mercedes Sprinter 2024" required>
+                            <input type="text" id="vehicle_type" placeholder="Ex: Mercedes Sprinter 2024">
                         </div>
                         <div class="input-group">
                             <label for="vehicle_category">Catégorie</label>
-                            <select id="vehicle_category" required>
+                            <select id="vehicle_category">
                                 <option value="Voiture">Voiture</option>
                                 <option value="Petite camionnette">Petite camionnette</option>
                                 <option value="Moyenne camionnette">Moyenne camionnette</option>
@@ -43,18 +43,8 @@
                     </div>
                     <div class="grid-2">
                         <div class="input-group">
-                            <label for="vehicle_view">Vue à représenter</label>
-                            <select id="vehicle_view" required>
-                                <option value="Vue latérale (profil)">Vue latérale (profil)</option>
-                                <option value="Vue 3/4 avant">Vue 3/4 avant</option>
-                                <option value="Vue 3/4 arrière">Vue 3/4 arrière</option>
-                                <option value="Vue arrière">Vue arrière</option>
-                                <option value="Vue avant">Vue avant</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
                             <label for="coverage_type">Type de Recouvrement</label>
-                            <select id="coverage_type" required>
+                            <select id="coverage_type">
                                 <option value="Semi-cover">Semi-cover</option>
                                 <option value="Full cover">Full cover</option>
                                 <option value="Marking">Marquage simple (Lettrage)</option>
@@ -72,7 +62,7 @@
                     <div class="grid-2">
                         <div class="input-group">
                             <label for="brand_name">Nom de Marque</label>
-                            <input type="text" id="brand_name" placeholder="Ex: TechSolutions" required>
+                            <input type="text" id="brand_name" placeholder="Ex: TechSolutions">
                         </div>
                         <div class="input-group">
                             <label for="industry">Secteur d'activité</label>
@@ -94,13 +84,11 @@
                     <div class="grid-2">
                         <div class="input-group">
                             <label for="style">Style Demandé</label>
-                            <input type="text" id="style" placeholder="Ex: Moderne, Minimaliste, Géométrique, Agressif"
-                                required>
+                            <input type="text" id="style" placeholder="Ex: Moderne, Minimaliste, Géométrique, Agressif">
                         </div>
                         <div class="input-group">
                             <label for="primary_colors">Couleurs Principales</label>
-                            <input type="text" id="primary_colors" placeholder="Ex: Bleu Marine, Blanc et Argent"
-                                required>
+                            <input type="text" id="primary_colors" placeholder="Ex: Bleu Marine, Blanc et Argent">
                         </div>
                     </div>
                     <div class="input-group">
@@ -128,13 +116,6 @@
                     </div>
                 </div>
             </form>
-
-            <section id="resultSection" class="hidden">
-                <h2>Vos Propositions</h2>
-                <div id="imageGrid" class="image-grid">
-                    <!-- Images will be injected here -->
-                </div>
-            </section>
         </main>
     </div>
     <script src="script.js"></script>
