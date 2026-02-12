@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <style>
         .results-header {
             text-align: center;
@@ -55,10 +56,50 @@
         }
 
         .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
             margin-bottom: 40px;
+        }
+
+        .chosen-section-label,
+        .alternatives-section-label {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #1d1d1f;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .chosen-section-label span,
+        .alternatives-section-label span {
+            background: #d4af37;
+            color: #000;
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .chosen-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .chosen-row .result-item {
+            width: 100%;
+        }
+
+        .alternatives-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
         .result-item {
@@ -357,12 +398,15 @@
                 return;
             }
 
-            images.forEach((url, index) => {
+            const chosenType = sessionStorage.getItem('chosenType') || '';
+            const otherTypes = JSON.parse(sessionStorage.getItem('otherTypes') || '[]');
+
+            function createCard(url, index, label) {
                 const item = document.createElement('div');
                 item.className = 'result-item';
                 item.innerHTML = `
                     <div class="result-item-image" data-url="${url}">
-                        <img src="${url}" alt="Design ${index + 1}">
+                        <img src="${url}" alt="${label}">
                         <span class="zoom-hint">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -374,19 +418,50 @@
                         </span>
                     </div>
                     <div class="result-item-footer">
-                        <span>Proposition ${index + 1}</span>
+                        <span>${label}</span>
                         <a class="download-btn" href="${url}" download="design-${index + 1}.png" target="_blank">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
                             </svg>
-                            Télécharger
+                            Telecharger
                         </a>
                     </div>
                 `;
-                grid.appendChild(item);
-            });
+                return item;
+            }
+
+            // --- CHOSEN TYPE: first image large, full width ---
+            const chosenLabel = document.createElement('p');
+            chosenLabel.className = 'chosen-section-label';
+            chosenLabel.innerHTML = 'Votre choix <span>' + (chosenType || 'Design') + '</span>';
+            grid.appendChild(chosenLabel);
+
+            const chosenRow = document.createElement('div');
+            chosenRow.className = 'chosen-row';
+            // First image = chosen type (displayed large)
+            chosenRow.appendChild(createCard(images[0], 0, chosenType || 'Proposition 1'));
+            grid.appendChild(chosenRow);
+
+            // --- ALTERNATIVES: 2nd and 3rd images side by side ---
+            if (images.length > 1) {
+                const altLabel = document.createElement('p');
+                altLabel.className = 'alternatives-section-label';
+                altLabel.innerHTML = 'Autres options';
+                grid.appendChild(altLabel);
+
+                const altRow = document.createElement('div');
+                altRow.className = 'alternatives-row';
+                for (let i = 1; i < images.length; i++) {
+                    let typeLabel = '';
+                    if (i === 1 && otherTypes[0]) typeLabel = otherTypes[0];
+                    else if (i === 2 && otherTypes[1]) typeLabel = otherTypes[1];
+                    else typeLabel = 'Proposition ' + (i + 1);
+                    altRow.appendChild(createCard(images[i], i, typeLabel));
+                }
+                grid.appendChild(altRow);
+            }
 
             // Lightbox: click image to enlarge
             grid.addEventListener('click', (e) => {

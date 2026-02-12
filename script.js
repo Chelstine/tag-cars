@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.removeItem('logoWarning');
                 }
                 sessionStorage.setItem('logoUsed', data.logoUsed ? 'true' : 'false');
+                sessionStorage.setItem('chosenType', data.chosenType || '');
+                sessionStorage.setItem('otherTypes', JSON.stringify(data.otherTypes || []));
                 window.location.href = 'results.html';
             } else {
                 alert('Aucune image générée. Vérifiez la console.');
