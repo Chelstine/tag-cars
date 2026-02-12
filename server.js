@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch'); // Ensure node-fetch is installed if using Node < 18, or use built-in fetch in Node 18+
+const fetch = require('node-fetch');
 const path = require('path');
+const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
@@ -9,18 +10,46 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '.'))); // Serve static files from current dir
+app.use(express.static(path.join(__dirname, '.')));
 
-// Placeholder for the external AI API endpoint
-// You would replace this with the actual URL provided by 'Akei AI' or OpenAI
-const AI_API_URL = process.env.AI_API_URL || 'https://api.openai.com/v1/images/generations';
+// Multer config for logo upload (in memory)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-app.post('/api/generate', async (req, res) => {
+// Helper: Upload logo to Kie.ai File Upload API and get a public URL
+async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
+    const base64Data = fileBuffer.toString('base64');
+    const ext = path.extname(fileName).slice(1) || 'png';
+    const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+    const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
+    console.log(`📤 Uploading logo to Kie.ai (${fileName}, ${(fileBuffer.length / 1024).toFixed(1)} KB)...`);
+    const uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            base64Data: dataUrl,
+            uploadPath: 'logos',
+            fileName: `logo-${Date.now()}.${ext}`
+        })
+    });
+    const uploadData = await uploadResponse.json();
+    console.log('📤 Upload response:', JSON.stringify(uploadData, null, 2));
+    if (!uploadResponse.ok || uploadData.code !== 200) {
+        throw new Error(`Logo upload failed: ${uploadData.msg || 'Unknown error'}`);
+    }
+    return uploadData.data.fileUrl;
+}
+
+app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
     try {
         const {
             vehicle_type, vehicle_view, coverage_zones, vehicle_category, coverage_type,
-            industry, brand_name, main_text, key_info, style, primary_colors, constraints, logo_instruction
+            industry, brand_name, main_text, key_info, style, primary_colors, constraints
         } = req.body;
+        const logoFile = req.file; // multer puts the uploaded file here
 
         // Construct the Prompt exactly as requested
         const prompt = `
@@ -52,7 +81,7 @@ Contraintes utilisateur : ${constraints}
 Règles : Respecter strictement les éléments à inclure. Éviter les détails trop fins.
 
 5) Logo & assets
-Instruction logo : ${logo_instruction}
+Logo fourni : ${logoFile ? 'Oui (image jointe en référence)' : 'Non'}
 Règles logo : Si un logo est fourni : l’intégrer proprement. Si non : typographie simple.
 
 6) Sortie attendue
@@ -78,21 +107,37 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             return res.json({ success: true, images: mockImages });
         }
 
-        // 1. Initiate Generation Task
+        // 1. Upload logo if provided
+        let logoUrl = null;
+        if (logoFile) {
+            try {
+                logoUrl = await uploadLogoToKie(logoFile.buffer, logoFile.originalname, KIE_API_KEY);
+                console.log(`✅ Logo uploaded: ${logoUrl}`);
+            } catch (uploadErr) {
+                console.error('⚠️ Logo upload failed, continuing without logo:', uploadErr.message);
+            }
+        }
+
+        // 2. Initiate Generation Task
         console.log(`🚀 Sending request to Kie.ai (${API_BASE_URL})...`);
 
-        // standard node-fetch v2 usage
+        const requestBody = {
+            prompt: prompt,
+            size: "1:1",
+            nVariants: 2
+        };
+        // If logo was uploaded, pass it as reference image
+        if (logoUrl) {
+            requestBody.filesUrl = [logoUrl];
+        }
+
         const generateResponse = await fetch(`${API_BASE_URL}/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${KIE_API_KEY}`
             },
-            body: JSON.stringify({
-                prompt: prompt,
-                size: "1:1",
-                nVariants: 4
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const genData = await generateResponse.json();
@@ -121,13 +166,13 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             return res.status(500).json({ success: false, error: "Invalid response from AI provider (No task_id found)" });
         }
 
-        // 2. Poll for Results
+        // 3. Poll for Results (60 attempts × 5s = up to 5 minutes)
         console.log(`⏳ Task ID received: ${taskId}. Polling for results...`);
         let attempts = 0;
-        const maxAttempts = 30;
+        const maxAttempts = 60;
 
         while (attempts < maxAttempts) {
-            await new Promise(r => setTimeout(r, 2000)); // Wait 2s
+            await new Promise(r => setTimeout(r, 5000)); // Wait 5s
 
             const statusResponse = await fetch(`${API_BASE_URL}/record-info?taskId=${taskId}`, {
                 method: 'GET',

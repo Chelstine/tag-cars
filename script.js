@@ -14,31 +14,32 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.classList.add('hidden');
         imageGrid.innerHTML = '';
 
-        // Collect Form Data
-        const formData = {
-            vehicle_type: document.getElementById('vehicle_type').value,
-            vehicle_category: document.getElementById('vehicle_category').value,
-            vehicle_view: document.getElementById('vehicle_view').value,
-            coverage_type: document.getElementById('coverage_type').value,
-            coverage_zones: document.getElementById('coverage_zones').value,
-            industry: document.getElementById('industry').value,
-            brand_name: document.getElementById('brand_name').value,
-            main_text: document.getElementById('main_text').value,
-            key_info: document.getElementById('key_info').value,
-            style: document.getElementById('style').value,
-            primary_colors: document.getElementById('primary_colors').value,
-            logo_instruction: document.getElementById('logo_instruction').value,
-            constraints: document.getElementById('constraints').value
-        };
+        // Collect Form Data as FormData (to support file upload)
+        const formData = new FormData();
+        formData.append('vehicle_type', document.getElementById('vehicle_type').value);
+        formData.append('vehicle_category', document.getElementById('vehicle_category').value);
+        formData.append('vehicle_view', document.getElementById('vehicle_view').value);
+        formData.append('coverage_type', document.getElementById('coverage_type').value);
+        formData.append('coverage_zones', document.getElementById('coverage_zones').value);
+        formData.append('industry', document.getElementById('industry').value);
+        formData.append('brand_name', document.getElementById('brand_name').value);
+        formData.append('main_text', document.getElementById('main_text').value);
+        formData.append('key_info', document.getElementById('key_info').value);
+        formData.append('style', document.getElementById('style').value);
+        formData.append('primary_colors', document.getElementById('primary_colors').value);
+        formData.append('constraints', document.getElementById('constraints').value);
+
+        // Append logo file if selected
+        const logoInput = document.getElementById('logo_file');
+        if (logoInput.files.length > 0) {
+            formData.append('logo_file', logoInput.files[0]);
+        }
 
         try {
-            // Send to Backend
+            // Send to Backend (FormData, no Content-Type header - browser sets it with boundary)
             const response = await fetch('/api/generate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
+                body: formData
             });
 
             const data = await response.json();
@@ -59,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 resultSection.classList.remove('hidden');
 
-                // Scroll to results
                 resultSection.scrollIntoView({ behavior: 'smooth' });
             } else {
                 alert('Aucune image générée. Vérifiez la console.');
@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error:', error);
             alert(`Erreur: ${error.message}`);
         } finally {
-            // Reset UI
             loadingIndicator.classList.add('hidden');
             generateBtn.classList.remove('hidden');
         }

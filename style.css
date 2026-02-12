@@ -52,7 +52,18 @@ header {
 .site-logo {
     max-width: 200px;
     height: auto;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+}
+
+.brand-title {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    color: var(--accent-color);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
 }
 
 .logo {
@@ -98,6 +109,7 @@ form {
     padding: 0;
     border: none;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
     margin-bottom: 40px;
     /* Internal spacing instead of separate blocks */
@@ -175,6 +187,32 @@ textarea {
     font-family: var(--font-body);
     font-size: 1rem;
     transition: all 0.2s;
+}
+
+.file-upload-wrapper {
+    position: relative;
+}
+
+.file-upload-wrapper input[type="file"] {
+    background: var(--input-bg);
+    border: 2px dashed #d0d0d0;
+    border-radius: 8px;
+    padding: 20px 16px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.file-upload-wrapper input[type="file"]:hover {
+    border-color: var(--accent-color);
+    background: rgba(212, 175, 55, 0.03);
+}
+
+.file-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
 }
 
 input:focus,

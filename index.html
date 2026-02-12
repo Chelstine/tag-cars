@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Covering</title>
+    <title>Print My Car - Générateur de Covering</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,8 @@
     <div class="background-animation"></div>
     <div class="container">
         <header>
-            <img src="https://placehold.co/200x80/transparent/d4af37?text=VOTRE+LOGO" alt="Logo" class="site-logo">
+            <img src="logo.jpeg" alt="Print My Car Logo" class="site-logo">
+            <h1 class="brand-title">Print My Car</h1>
             <p>Créez des concepts de covering de véhicule ultra-réalistes et professionnels.</p>
         </header>
 
@@ -103,9 +104,11 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <label for="logo_instruction">Instructions Logo</label>
-                        <textarea id="logo_instruction" rows="2"
-                            placeholder="Décrivez le logo ou indiquez 'Utiliser le texte comme logo'"></textarea>
+                        <label for="logo_file">Logo (image)</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                            <p class="file-hint">Formats acceptés : PNG, JPG, WEBP, SVG (max 10 Mo)</p>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="constraints">Contraintes & Éléments à éviter</label>
