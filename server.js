@@ -104,6 +104,7 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
         }
 
         // Handle Sync vs Async responses
+        // Based on test: { code: 200, msg: "success", data: { task_id: "..." } }
         const taskId = genData.data?.task_id || genData.task_id;
 
         if (!taskId) {
@@ -115,8 +116,8 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             if (genData.data && genData.data.url) {
                 return res.json({ success: true, images: [genData.data.url] });
             }
-            console.error("Unknown API Response Structure:", genData);
-            return res.status(500).json({ success: false, error: "Invalid response from AI provider" });
+            console.error("Unknown API Response Structure:", JSON.stringify(genData, null, 2));
+            return res.status(500).json({ success: false, error: "Invalid response from AI provider (No task_id found)" });
         }
 
         // 2. Poll for Results
