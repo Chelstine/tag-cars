@@ -62,23 +62,29 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
         console.log("Generated Prompt:", prompt);
 
         // --- KIE.AI INTEGRATION ---
-        const KIE_API_KEY = process.env.KIE_API_KEY; // User must set this in Railway
-        const API_BASE_URL = 'https://api.kie.ai/api/v1/gpt4o-image'; // Based on research
+        const KIE_API_KEY = process.env.KIE_API_KEY;
+        const API_BASE_URL = 'https://api.kie.ai/api/v1/gpt4o-image';
 
-        if (!KIE_API_KEY) {
-            // Fallback to Mock if no key provided (for testing UI)
-            console.warn("No KIE_API_KEY found. using Mock Data.");
+        // 0. CHECK IF KEY IS PRESENT
+        if (!KIE_API_KEY || KIE_API_KEY.trim() === '') {
+            console.warn("⚠️ No KIE_API_KEY found (or empty). Switching to MOCK MODE.");
             const mockImages = [
                 "https://placehold.co/1024x768/000000/d4af37?text=Design+Prop+1",
                 "https://placehold.co/1024x768/1a1a1a/ffffff?text=Design+Prop+2",
                 "https://placehold.co/1024x768/333333/d4af37?text=Design+Prop+3"
             ];
-            return setTimeout(() => res.json({ success: true, images: mockImages }), 2000);
+            // Using a Promise-based delay instead of returning setTimeout to avoid ambiguity
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return res.json({ success: true, images: mockImages });
         }
 
         // 1. Initiate Generation Task
-        console.log("Sending request to Kie.ai...");
-        const generateResponse = await fetch(`${API_BASE_URL}/generate`, {
+        console.log(`🚀 Sending request to Kie.ai (${API_BASE_URL})...`);
+
+        // Ensure we are using a valid fetch function
+        const fetchFunc = (inputs, init) => import('node-fetch').then(({ default: fetch }) => fetch(inputs, init));
+
+        const generateResponse = await fetchFunc(`${API_BASE_URL}/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -86,77 +92,74 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             },
             body: JSON.stringify({
                 prompt: prompt,
-                size: "1024x1024", // Assuming standard format, or "3:2" based on docs
-                n: 3 // Requesting 3 variants
+                size: "1024x1024",
+                n: 3
             })
         });
 
         const genData = await generateResponse.json();
-        console.log("Generation Start Response:", genData);
+        console.log("Generation Response:", JSON.stringify(genData, null, 2));
 
         if (!generateResponse.ok) {
-            throw new Error(`Kie.ai Error: ${JSON.stringify(genData)}`);
+            console.error("Kie.ai API Error:", genData);
+            return res.status(500).json({ success: false, error: genData.message || "Failing contacting Kie.ai" });
         }
 
-        // Kie.ai likely returns a task_id or similar. 
-        // Adapting based on common async patterns: { code: 200, data: { task_id: "..." } }
+        // Handle Sync vs Async responses
         const taskId = genData.data?.task_id || genData.task_id;
 
         if (!taskId) {
-            // Check if it returned images directly (Sync mode)
+            // Check for direct images (Sync mode)
             if (genData.data && Array.isArray(genData.data) && genData.data[0].url) {
                 return res.json({ success: true, images: genData.data.map(img => img.url) });
             }
-            throw new Error("No Task ID or Images received from Kie.ai");
+            console.error("Unknown API Response Structure:", genData);
+            return res.status(500).json({ success: false, error: "Invalid response from AI provider" });
         }
 
         // 2. Poll for Results
+        console.log(`⏳ Task ID received: ${taskId}. Polling for results...`);
         let attempts = 0;
-        const maxAttempts = 30; // 30 * 2s = 60s timeout
+        const maxAttempts = 30;
 
-        const checkStatus = async () => {
-            const statusResponse = await fetch(`${API_BASE_URL}/record-info?task_id=${taskId}`, {
+        while (attempts < maxAttempts) {
+            await new Promise(r => setTimeout(r, 2000)); // Wait 2s
+
+            const statusResponse = await fetchFunc(`${API_BASE_URL}/record-info?task_id=${taskId}`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${KIE_API_KEY}` }
             });
-            const statusData = await statusResponse.json();
-            console.log("Polling Status:", statusData);
 
-            // Check for completion (Adapt based on actual API response structure)
-            // effective response often has status: "success" or "completed" and data: { images: [...] }
+            if (!statusResponse.ok) {
+                console.warn(`Polling request failed: ${statusResponse.status}`);
+                attempts++;
+                continue;
+            }
+
+            const statusData = await statusResponse.json();
+            console.log(`Polling attempt ${attempts + 1}/${maxAttempts}:`, statusData?.data?.status || "Unknown");
+
             if (statusData.code === 200 && statusData.data && statusData.data.status === 'SUCCESS') {
-                return statusData.data.result; // Expecting { url: "..." } array
+                const result = statusData.data.result;
+                const resultImages = Array.isArray(result) ? result.map(img => img.url) : [result.url];
+                return res.json({ success: true, images: resultImages });
             }
 
             if (statusData.data && statusData.data.status === 'FAILED') {
-                throw new Error("Image Generation Failed");
+                return res.status(500).json({ success: false, error: "AI Generation marked as FAILED" });
             }
 
-            return null; // Still processing
-        };
-
-        let resultImages = null;
-        while (attempts < maxAttempts) {
-            await new Promise(r => setTimeout(r, 2000)); // Wait 2s
-            const result = await checkStatus();
-            if (result) {
-                // Formatting result to array of URLs
-                // Adjust per actual response: result might be [{url: '...'}, ...]
-                resultImages = Array.isArray(result) ? result.map(img => img.url) : [result.url];
-                break;
-            }
             attempts++;
         }
 
-        if (resultImages) {
-            res.json({ success: true, images: resultImages });
-        } else {
-            throw new Error("Timeout waiting for Kie.ai generation");
-        }
+        return res.status(504).json({ success: false, error: "Timeout waiting for generations" });
 
     } catch (error) {
-        console.error("Server Error:", error);
-        res.status(500).json({ success: false, error: "Internal Server Error" });
+        console.error("🔥 Server Exception:", error);
+        // Ensure headers aren't already sent
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, error: error.message || "Internal Server Error" });
+        }
     }
 });
 
