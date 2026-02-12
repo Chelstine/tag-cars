@@ -49,6 +49,12 @@ header {
     animation: fadeInDown 0.8s ease-out;
 }
 
+.site-logo {
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
 .logo {
     font-family: var(--font-heading);
     font-size: 1.1rem;

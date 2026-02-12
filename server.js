@@ -90,7 +90,7 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             },
             body: JSON.stringify({
                 prompt: prompt,
-                size: "1024x1024",
+                size: "1:1",
                 n: 3
             })
         });
@@ -148,7 +148,9 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             }
 
             if (statusData.data && statusData.data.status === 'FAILED') {
-                return res.status(500).json({ success: false, error: "AI Generation marked as FAILED" });
+                console.error("❌ Task Failed Details:", JSON.stringify(statusData, null, 2));
+                const failureReason = statusData.data.failure_reason || statusData.data.error || "Unknown error from AI provider";
+                return res.status(500).json({ success: false, error: `AI Failed: ${failureReason}` });
             }
 
             attempts++;
