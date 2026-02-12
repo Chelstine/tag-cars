@@ -385,11 +385,6 @@
                 warn.style.cssText = 'background:#fff3cd;color:#856404;padding:12px 20px;border-radius:8px;margin-bottom:20px;font-size:0.9rem;text-align:center;';
                 warn.textContent = 'Logo non pris en compte : ' + logoWarning;
                 grid.parentNode.insertBefore(warn, grid);
-            } else if (logoUsed === 'true') {
-                const ok = document.createElement('div');
-                ok.style.cssText = 'background:#d4edda;color:#155724;padding:12px 20px;border-radius:8px;margin-bottom:20px;font-size:0.9rem;text-align:center;';
-                ok.textContent = 'Logo envoye avec succes comme reference pour la generation.';
-                grid.parentNode.insertBefore(ok, grid);
             }
 
             if (images.length === 0) {

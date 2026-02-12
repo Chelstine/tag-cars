@@ -160,8 +160,8 @@ Style graphique : ${style}
 Couleurs principales : ${primary_colors}
 Hierarchie visuelle claire. Lisibilite a distance.
 
-=== LOGO ===
-${logoFile ? (logoUrl ? 'Logo fourni : OUI. REPRODUIS CE LOGO EXACTEMENT tel quel. Place-le de maniere visible sur le vehicule.' : 'Logo fourni mais echec upload. Utilise une typographie soignee.') : 'Pas de logo. Utilise une typographie soignee pour le nom de marque.'}
+=== LOGO (TRES IMPORTANT) ===
+${logoFile ? (logoUrl ? 'Logo fourni : OUI. Le logo DOIT apparaitre sur CHACUNE des 3 images, bien visible et fidele a l\'original. Place le logo sur chaque vehicule de maniere professionnelle (sur la portiere, le capot ou le flanc). Ne modifie PAS le logo. REPRODUIS-LE A L\'IDENTIQUE sur les 3 variantes.' : 'Logo fourni mais echec upload. Utilise une typographie soignee pour le nom de marque a la place du logo.') : 'Pas de logo fourni. Utilise une typographie soignee et elegante pour afficher le nom de marque sur le vehicule.'}
 
 === CONTRAINTES ===
 ${constraints || 'Aucune contrainte specifique.'}
