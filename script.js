@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.images && data.images.length > 0) {
                 sessionStorage.setItem('generatedImages', JSON.stringify(data.images));
+                if (data.logoError) {
+                    sessionStorage.setItem('logoWarning', data.logoError);
+                } else {
+                    sessionStorage.removeItem('logoWarning');
+                }
+                sessionStorage.setItem('logoUsed', data.logoUsed ? 'true' : 'false');
                 window.location.href = 'results.html';
             } else {
                 alert('Aucune image générée. Vérifiez la console.');

@@ -17,13 +17,15 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 
 // Helper: Upload logo to Kie.ai File Upload API and get a public URL
 async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
-    const base64Data = fileBuffer.toString('base64');
-    const ext = path.extname(fileName).slice(1) || 'png';
+    const base64Raw = fileBuffer.toString('base64');
+    const ext = path.extname(fileName).slice(1).toLowerCase() || 'png';
     const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-    const dataUrl = `data:${mimeType};base64,${base64Data}`;
+    const dataUrl = `data:${mimeType};base64,${base64Raw}`;
 
-    console.log(`Uploading logo to Kie.ai (${fileName}, ${(fileBuffer.length / 1024).toFixed(1)} KB)...`);
-    const uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
+    console.log(`[LOGO] Uploading to Kie.ai (${fileName}, ${(fileBuffer.length / 1024).toFixed(1)} KB, ext=${ext})...`);
+
+    // Try with data URL format first
+    let uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -35,12 +37,37 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
             fileName: `logo-${Date.now()}.${ext}`
         })
     });
-    const uploadData = await uploadResponse.json();
-    console.log('Upload response:', JSON.stringify(uploadData, null, 2));
+    let uploadData = await uploadResponse.json();
+    console.log('[LOGO] Upload response (dataUrl):', JSON.stringify(uploadData, null, 2));
+
+    // If data URL format failed, try raw base64
     if (!uploadResponse.ok || uploadData.code !== 200) {
-        throw new Error(`Logo upload failed: ${uploadData.msg || 'Unknown error'}`);
+        console.log('[LOGO] Data URL format failed, trying raw base64...');
+        uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                base64Data: base64Raw,
+                uploadPath: 'logos',
+                fileName: `logo-${Date.now()}.${ext}`
+            })
+        });
+        uploadData = await uploadResponse.json();
+        console.log('[LOGO] Upload response (raw):', JSON.stringify(uploadData, null, 2));
     }
-    return uploadData.data.fileUrl;
+
+    if (!uploadResponse.ok || uploadData.code !== 200) {
+        throw new Error(`Logo upload failed: ${uploadData.msg || JSON.stringify(uploadData)}`);
+    }
+
+    const fileUrl = uploadData.data?.fileUrl;
+    if (!fileUrl) {
+        throw new Error(`Logo upload returned no fileUrl: ${JSON.stringify(uploadData.data)}`);
+    }
+    return fileUrl;
 }
 
 app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
@@ -87,7 +114,7 @@ Couleurs principales : ${primary_colors}
 Le design doit refleter le secteur "${industry}" tout en respectant le style demande. Hierarchie visuelle claire. Lisibilite a distance (texte principal > infos secondaires).
 
 === LOGO ===
-Logo fourni : ${logoFile ? 'OUI - utilise le logo fourni en piece jointe comme reference exacte et integre-le dans le design.' : 'NON - utilise uniquement une typographie soignee pour le nom de marque.'}
+Logo fourni : ${logoFile ? (logoUrl ? 'OUI - Le logo est fourni en image de reference (voir image jointe). REPRODUIS CE LOGO EXACTEMENT tel quel dans le design. Ne le modifie pas, ne le remplace pas par du texte. Place-le de maniere visible et proportionnee sur le vehicule.' : 'OUI mais echec upload - utilise une typographie soignee pour le nom de marque a la place.') : 'NON - utilise uniquement une typographie soignee pour le nom de marque.'}
 
 === CONTRAINTES ===
 ${constraints || 'Aucune contrainte specifique.'}
@@ -119,13 +146,17 @@ Regles supplementaires : Pas de details trop fins non imprimables. Pas de texte 
 
         // Upload logo if provided
         let logoUrl = null;
+        let logoUploadError = null;
         if (logoFile) {
             try {
                 logoUrl = await uploadLogoToKie(logoFile.buffer, logoFile.originalname, KIE_API_KEY);
-                console.log(`Logo uploaded: ${logoUrl}`);
+                console.log(`[LOGO] SUCCESS - URL: ${logoUrl}`);
             } catch (uploadErr) {
-                console.error('Logo upload failed, continuing without logo:', uploadErr.message);
+                logoUploadError = uploadErr.message;
+                console.error('[LOGO] FAILED:', uploadErr.message);
             }
+        } else {
+            console.log('[LOGO] No logo file received from form');
         }
 
         // Send generation request
@@ -202,7 +233,12 @@ Regles supplementaires : Pas de details trop fins non imprimables. Pas de texte 
                 const response = statusData.data.response;
                 const resultUrls = response?.resultUrls || response?.result_urls || [];
                 if (resultUrls.length > 0) {
-                    return res.json({ success: true, images: resultUrls });
+                    return res.json({ 
+                        success: true, 
+                        images: resultUrls,
+                        logoUsed: !!logoUrl,
+                        logoError: logoUploadError || null
+                    });
                 }
                 console.warn("Success but no resultUrls found:", JSON.stringify(statusData.data, null, 2));
                 return res.status(500).json({ success: false, error: "Generation succeeded but no images returned" });
