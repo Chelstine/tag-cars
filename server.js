@@ -151,10 +151,13 @@ ${constraints || 'Aucune contrainte specifique.'}
 Regles supplementaires : Pas de details trop fins non imprimables. Pas de texte flou ou illisible.
 
 === FORMAT DE SORTIE (CRITIQUE) ===
-- Genere exactement UNE image.
-- L'image montre UN SEUL vehicule "${vehicle_type}" complet, vu en "${vehicle_view}".
+- Genere exactement UNE image COMPLETE, non recadree, non coupee.
+- L'image ENTIERE doit etre visible : le vehicule "${vehicle_type}" complet de la calandre au pare-chocs arriere, vu en "${vehicle_view}", avec TOUT le design visible.
+- Ne coupe AUCUNE partie du vehicule. Ne zoome pas sur un detail. Montre le vehicule EN ENTIER dans le cadre avec des marges suffisantes autour.
 - Le design de covering/lettrage est applique de maniere photorealiste sur le vehicule.
 - PAS de collage, PAS de mosaique, PAS de split-screen, PAS de texte flottant en dehors du vehicule.
+- PAS de recadrage serre. L'image doit montrer le vehicule complet avec de l'espace autour.
+- Ratio carre (1:1). Le vehicule doit etre centre dans l'image avec de l'air sur tous les cotes.
 - Rendu final : mockup professionnel haute qualite, pret a presenter a un client.
 `;
 
