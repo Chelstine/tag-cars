@@ -91,21 +91,22 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             body: JSON.stringify({
                 prompt: prompt,
                 size: "1:1",
-                n: 3
+                nVariants: 4
             })
         });
 
         const genData = await generateResponse.json();
-        console.log("Generation Response:", JSON.stringify(genData, null, 2));
+        console.log("🚀 Kie.ai RAW Response:", JSON.stringify(genData, null, 2));
 
-        if (!generateResponse.ok) {
-            console.error("Kie.ai API Error:", genData);
-            return res.status(500).json({ success: false, error: genData.message || "Failing contacting Kie.ai" });
+        if (!generateResponse.ok || (genData.code && genData.code !== 200)) {
+            console.error("❌ Kie.ai API Error:", genData);
+            const errorMsg = genData.msg || genData.message || "Unknown error from AI provider";
+            return res.status(500).json({ success: false, error: `AI Provider Error: ${errorMsg} (Code: ${genData.code})` });
         }
 
-        // Handle Sync vs Async responses
-        // Based on test: { code: 200, msg: "success", data: { task_id: "..." } }
-        const taskId = genData.data?.task_id || genData.task_id;
+        // Handle Async response
+        // API returns: { code: 200, msg: "success", data: { taskId: "..." } }
+        const taskId = genData.data?.taskId || genData.taskId;
 
         if (!taskId) {
             // Check for direct images (Sync mode)
@@ -128,7 +129,7 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
         while (attempts < maxAttempts) {
             await new Promise(r => setTimeout(r, 2000)); // Wait 2s
 
-            const statusResponse = await fetch(`${API_BASE_URL}/record-info?task_id=${taskId}`, {
+            const statusResponse = await fetch(`${API_BASE_URL}/record-info?taskId=${taskId}`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${KIE_API_KEY}` }
             });
@@ -140,17 +141,25 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             }
 
             const statusData = await statusResponse.json();
-            console.log(`Polling attempt ${attempts + 1}/${maxAttempts}:`, statusData?.data?.status || "Unknown");
+            const successFlag = statusData?.data?.successFlag;
+            const progress = statusData?.data?.progress || "0";
+            console.log(`Polling attempt ${attempts + 1}/${maxAttempts}: successFlag=${successFlag}, progress=${progress}`);
 
-            if (statusData.code === 200 && statusData.data && statusData.data.status === 'SUCCESS') {
-                const result = statusData.data.result;
-                const resultImages = Array.isArray(result) ? result.map(img => img.url) : [result.url];
-                return res.json({ success: true, images: resultImages });
+            if (statusData.code === 200 && statusData.data && successFlag === 1) {
+                // Success: extract image URLs from response.result_urls
+                const response = statusData.data.response;
+                const resultUrls = response?.result_urls || [];
+                if (resultUrls.length > 0) {
+                    return res.json({ success: true, images: resultUrls });
+                }
+                // Fallback: check other possible structures
+                console.warn("Success but no result_urls found:", JSON.stringify(statusData.data, null, 2));
+                return res.status(500).json({ success: false, error: "Generation succeeded but no images returned" });
             }
 
-            if (statusData.data && statusData.data.status === 'FAILED') {
+            if (successFlag === 2) {
                 console.error("❌ Task Failed Details:", JSON.stringify(statusData, null, 2));
-                const failureReason = statusData.data.failure_reason || statusData.data.error || "Unknown error from AI provider";
+                const failureReason = statusData.data.errorMessage || statusData.data.failMsg || "Unknown error from AI provider";
                 return res.status(500).json({ success: false, error: `AI Failed: ${failureReason}` });
             }
 
