@@ -191,9 +191,9 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             console.log(`Polling attempt ${attempts + 1}/${maxAttempts}: successFlag=${successFlag}, progress=${progress}`);
 
             if (statusData.code === 200 && statusData.data && successFlag === 1) {
-                // Success: extract image URLs from response.result_urls
+                // Success: extract image URLs from response.resultUrls
                 const response = statusData.data.response;
-                const resultUrls = response?.result_urls || [];
+                const resultUrls = response?.resultUrls || response?.result_urls || [];
                 if (resultUrls.length > 0) {
                     return res.json({ success: true, images: resultUrls });
                 }
