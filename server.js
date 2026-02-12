@@ -81,10 +81,8 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
         // 1. Initiate Generation Task
         console.log(`🚀 Sending request to Kie.ai (${API_BASE_URL})...`);
 
-        // Ensure we are using a valid fetch function
-        const fetchFunc = (inputs, init) => import('node-fetch').then(({ default: fetch }) => fetch(inputs, init));
-
-        const generateResponse = await fetchFunc(`${API_BASE_URL}/generate`, {
+        // standard node-fetch v2 usage
+        const generateResponse = await fetch(`${API_BASE_URL}/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -113,6 +111,10 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
             if (genData.data && Array.isArray(genData.data) && genData.data[0].url) {
                 return res.json({ success: true, images: genData.data.map(img => img.url) });
             }
+            // Check for single image in data
+            if (genData.data && genData.data.url) {
+                return res.json({ success: true, images: [genData.data.url] });
+            }
             console.error("Unknown API Response Structure:", genData);
             return res.status(500).json({ success: false, error: "Invalid response from AI provider" });
         }
@@ -125,7 +127,7 @@ Générer 3 variante(s) distincte(s). Rendu attendu : maquette réaliste sur la 
         while (attempts < maxAttempts) {
             await new Promise(r => setTimeout(r, 2000)); // Wait 2s
 
-            const statusResponse = await fetchFunc(`${API_BASE_URL}/record-info?task_id=${taskId}`, {
+            const statusResponse = await fetch(`${API_BASE_URL}/record-info?task_id=${taskId}`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${KIE_API_KEY}` }
             });

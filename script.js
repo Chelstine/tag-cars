@@ -41,12 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(formData)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Erreur lors de la génération');
+                throw new Error(data.error || 'Erreur lors de la génération');
             }
 
-            const data = await response.json();
-            
             // Display Results
             if (data.images && data.images.length > 0) {
                 data.images.forEach((imageUrl, index) => {
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageGrid.appendChild(card);
                 });
                 resultSection.classList.remove('hidden');
-                
+
                 // Scroll to results
                 resultSection.scrollIntoView({ behavior: 'smooth' });
             } else {
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error:', error);
-            alert('Une erreur est survenue lors de la communication avec l\'IA.');
+            alert(`Erreur: ${error.message}`);
         } finally {
             // Reset UI
             loadingIndicator.classList.add('hidden');
