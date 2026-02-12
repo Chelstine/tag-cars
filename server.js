@@ -75,9 +75,9 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
 // Build a prompt for a SINGLE covering type - 1 vehicle, 1 image
 function buildSinglePrompt(coveringType, vehicle_type, vehicle_category, brand_name, main_text, key_info, industry, style, primary_colors, constraints, logoFile, logoUrl) {
     const coveringDesc = {
-        'Standard': 'STANDARD (Lettrage / Marquage simple) : Le vehicule GARDE sa couleur d\'origine intacte. Seuls le nom de marque, le slogan, les coordonnees et le logo sont appliques en lettrage vinyle decoupe sur le flanc lateral (PAS sur les vitres). Aucun fond colore, aucun covering de surface. Juste du lettrage propre et lisible sur la carrosserie d\'origine. La peinture d\'origine du vehicule reste 100% visible.',
-        'Semi-cover': 'SEMI-COVER (Covering partiel) : La couleur et les graphismes du design recouvrent environ 40 a 60% de la surface laterale du vehicule (par exemple la moitie basse, ou de la porte avant jusqu\'a l\'arriere). Le reste de la carrosserie reste dans la couleur d\'origine du vehicule. Le nom de marque, slogan et coordonnees sont integres dans la zone couverte.',
-        'Full cover': 'FULL COVER (Total covering) : La couleur et le design recouvrent la TOTALITE de la carrosserie visible (capot, flancs, portes, hayon) SAUF les vitres et les pare-chocs. Le vehicule entier est transforme aux couleurs de la marque. Le nom, slogan et coordonnees sont integres dans le design global.'
+        'Standard': `STANDARD (Lettrage / Marquage simple) : Le vehicule GARDE sa couleur d'origine intacte. Seuls le nom de marque, le slogan, les coordonnees et le logo sont appliques en lettrage vinyle decoupe sur le flanc lateral (PAS sur les vitres). Aucun fond colore, aucun covering de surface. Le lettrage utilise les couleurs ${primary_colors}. La peinture d'origine du vehicule reste 100% visible.`,
+        'Semi-cover': `SEMI-COVER (Covering partiel) : Les couleurs ${primary_colors} recouvrent environ 40 a 60% de la surface laterale du vehicule (par exemple la moitie basse, ou de la porte avant jusqu'a l'arriere). Le reste de la carrosserie reste dans la couleur d'origine du vehicule. Le nom de marque, slogan et coordonnees sont integres dans la zone couverte aux couleurs ${primary_colors}.`,
+        'Full cover': `FULL COVER (Total covering) : Les couleurs ${primary_colors} recouvrent la TOTALITE de la carrosserie visible (capot, flancs, portes, hayon) SAUF les vitres et les pare-chocs. Le vehicule entier est transforme aux couleurs ${primary_colors}. Le nom, slogan et coordonnees sont integres dans le design global.`
     };
 
     let logoInstruction = 'Pas de logo fourni. Utilise une typographie soignee et elegante pour afficher le nom de marque sur le vehicule.';
@@ -89,48 +89,34 @@ function buildSinglePrompt(coveringType, vehicle_type, vehicle_category, brand_n
         }
     }
 
-    return `
-Tu es un designer expert en covering et lettrage de vehicules commerciaux.
-Genere UNE SEULE IMAGE contenant UN SEUL vehicule.
+    return `Tu es un designer expert en covering vehicule commercial. Genere UNE SEULE IMAGE avec UN SEUL vehicule.
 
-=== VEHICULE ===
-Modele EXACT : ${vehicle_type}
-Categorie : ${vehicle_category}
-Le vehicule DOIT etre un "${vehicle_type}" exact. Respecte sa silhouette, proportions, phares, calandre et lignes specifiques.
+VEHICULE : ${vehicle_type} (${vehicle_category})
+VUE : Profil lateral pur (perpendiculaire au flanc). Vehicule complet dans le cadre. Fond neutre.
 
-=== VUE ===
-VUE LATERALE DE PROFIL uniquement (cote gauche ou droit).
-On voit tout le flanc lateral, des roues avant aux roues arriere.
-PAS de vue de face, PAS de vue 3/4, PAS de vue arriere. PROFIL LATERAL PUR.
-Fond neutre (studio gris clair ou parking propre). Le vehicule EN ENTIER dans le cadre avec des marges.
-
-=== TYPE DE COVERING : ${coveringType} ===
+COVERING A APPLIQUER : ${coveringType}
 ${coveringDesc[coveringType] || coveringDesc['Standard']}
 
-=== MARQUE & TEXTE ===
-Nom de marque : "${brand_name}"
-Slogan / texte principal : "${main_text}"
-Informations (tel, site, etc.) : "${key_info}"
-Secteur d'activite : ${industry}
-N'affiche QUE les textes fournis. N'invente AUCUN texte. Si un champ est vide, ne l'affiche pas.
+COULEURS OBLIGATOIRES DU DESIGN : ${primary_colors}
+Ces couleurs doivent etre utilisees pour tout le covering/lettrage. C'est le choix du client.
 
-=== STYLE & COULEURS ===
-Style graphique : ${style}
-Couleurs principales : ${primary_colors}
+TEXTES A AFFICHER (ne rien inventer) :
+- Marque : "${brand_name}"
+- Slogan : "${main_text}"
+- Infos : "${key_info}"
+- Secteur : ${industry}
+Style : ${style}
 
-=== LOGO ===
-${logoInstruction}
+LOGO : ${logoInstruction}
 
-=== CONTRAINTES ===
-${constraints || 'Aucune contrainte specifique.'}
+${constraints ? 'CONTRAINTES : ' + constraints : ''}
 
-=== FORMAT (CRITIQUE) ===
-- UNE SEULE IMAGE avec UN SEUL vehicule "${vehicle_type}".
-- PAS 2 vehicules, PAS 3. UN SEUL vehicule sur l'image.
-- PAS de collage, PAS de mosaique, PAS de split-screen.
-- Vehicule COMPLET non coupe, de la calandre au pare-chocs arriere.
-- VUE DE PROFIL LATERAL uniquement.
-- Ratio 1:1. Rendu photorealiste haute qualite.
+REGLES STRICTES :
+1. UNE SEULE IMAGE, UN SEUL vehicule "${vehicle_type}"
+2. Profil lateral uniquement, pas de 3/4, pas de face
+3. Pas de collage, pas de mosaique
+4. Vehicule complet non coupe
+5. Rendu photorealiste, ratio 1:1
 `;
 }
 
