@@ -130,10 +130,14 @@ On doit voir UNIQUEMENT le PROFIL du vehicule : tout le flanc lateral, des roues
 NE MONTRE PAS le capot de face. NE MONTRE PAS la vue 3/4. UNIQUEMENT le profil lateral pur, comme une photo prise exactement perpendiculairement au cote du vehicule.
 Fond neutre (studio gris clair ou parking propre). Le vehicule EN ENTIER dans le cadre avec des marges.
 
-=== GENERATION DE 3 VARIANTES (TRES IMPORTANT) ===
-Tu vas generer 3 images DIFFERENTES. Chaque image montre le MEME vehicule "${vehicle_type}" en VUE DE PROFIL LATERALE, mais avec un TYPE DE COVERING DIFFERENT.
+=== REGLE ABSOLUE : 1 SEUL VEHICULE PAR IMAGE ===
+Chaque image generee contient EXACTEMENT 1 seul vehicule. Jamais 2, jamais 3. UNE SEULE voiture par image.
 
-IMAGE 1 : TYPE "${chosenType}" (choix principal du client)
+=== GENERATION DE 3 VARIANTES (ORDRE OBLIGATOIRE) ===
+Tu vas generer exactement 3 images. Chaque image montre le MEME vehicule "${vehicle_type}" en VUE DE PROFIL LATERALE, avec un TYPE DE COVERING DIFFERENT.
+L'ORDRE EST CRUCIAL : IMAGE 1 = le choix du client, IMAGE 2 et 3 = les alternatives.
+
+IMAGE 1 (PRIORITAIRE - choix du client) : TYPE "${chosenType}"
 ${chosenType === 'Standard' ? 'STANDARD (Lettrage / Marquage simple) : Le vehicule GARDE sa couleur d\'origine intacte. Seuls le nom de marque, le slogan, les coordonnees et le logo sont appliques en lettrage vinyle decoupe sur le flanc lateral (PAS sur les vitres). Aucun fond colore, aucun covering de surface. Juste du lettrage propre et lisible sur la carrosserie d\'origine.' : ''}${chosenType === 'Semi-cover' ? 'SEMI-COVER (Covering partiel) : La couleur et les graphismes du design recouvrent environ 40 a 60% de la surface laterale du vehicule (par exemple la moitie basse, ou de la porte avant jusqu\'a l\'arriere). Le reste de la carrosserie reste dans la couleur d\'origine. Le nom de marque, slogan et coordonnees sont integres dans la zone couverte.' : ''}${chosenType === 'Full cover' ? 'FULL COVER (Total covering) : La couleur et le design recouvrent la TOTALITE de la carrosserie visible (capot, flancs, portes, hayon) SAUF les vitres et les pare-chocs. Le vehicule entier est transforme aux couleurs de la marque. Le nom, slogan et coordonnees sont integres dans le design global.' : ''}
 
 IMAGE 2 : TYPE "${otherTypes[0]}" (alternative)
@@ -162,14 +166,15 @@ ${logoFile ? (logoUrl ? 'Logo fourni : OUI. REPRODUIS CE LOGO EXACTEMENT tel que
 === CONTRAINTES ===
 ${constraints || 'Aucune contrainte specifique.'}
 
-=== FORMAT DE CHAQUE IMAGE (CRITIQUE) ===
-- Chaque image = UN SEUL vehicule "${vehicle_type}" complet, VU DE PROFIL LATERAL.
-- Image COMPLETE non coupee. Vehicule entier visible de la calandre au pare-chocs arriere.
-- PAS de vue du capot, PAS de vue 3/4, PAS de vue de face. PROFIL LATERAL uniquement.
-- PAS de collage, PAS de mosaique, PAS de split-screen.
-- Marges suffisantes autour du vehicule. Ratio 1:1.
+=== FORMAT DE CHAQUE IMAGE (CRITIQUE - RESPECTER A LA LETTRE) ===
+- EXACTEMENT 1 SEUL vehicule "${vehicle_type}" par image. PAS 2, PAS 3. UN SEUL.
+- Le vehicule est COMPLET et non coupe. On voit tout : de la calandre au pare-chocs arriere.
+- VUE DE PROFIL LATERAL uniquement (perpendiculaire au flanc du vehicule).
+- PAS de vue de face, PAS de vue 3/4, PAS de vue arriere. PROFIL LATERAL PUR.
+- PAS de collage, PAS de mosaique, PAS de split-screen, PAS de plusieurs vehicules.
+- Fond neutre. Marges suffisantes autour du vehicule. Ratio 1:1.
 - Rendu photorealiste haute qualite.
-- Les 3 images doivent montrer des niveaux de couverture CLAIREMENT differents.
+- Les 3 images doivent montrer des niveaux de couverture CLAIREMENT differents les uns des autres.
 `;
 
         console.log("Generated Prompt:", prompt);
