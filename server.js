@@ -76,14 +76,14 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
 function buildSinglePrompt(coveringType, vehicle_type, vehicle_category, brand_name, main_text, key_info, industry, style, primary_colors, constraints, logoFile, logoUrl) {
     const coveringDesc = {
         'Standard': `STANDARD (Lettrage / Marquage simple) : Le vehicule GARDE sa couleur d'origine intacte. Seuls le nom de marque, le slogan, les coordonnees et le logo sont appliques en lettrage vinyle decoupe sur le flanc lateral (PAS sur les vitres). Aucun fond colore, aucun covering de surface. Le lettrage utilise les couleurs ${primary_colors}. La peinture d'origine du vehicule reste 100% visible.`,
-        'Semi-cover': `SEMI-COVER (Covering partiel) : Les couleurs ${primary_colors} recouvrent environ 40 a 60% de la surface laterale du vehicule (par exemple la moitie basse, ou de la porte avant jusqu'a l'arriere). Le reste de la carrosserie reste dans la couleur d'origine du vehicule. Le nom de marque, slogan et coordonnees sont integres dans la zone couverte aux couleurs ${primary_colors}.`,
+        'Semi-cover': `SEMI-COVER (Covering partiel - EXACTEMENT 40 a 60% de la surface) : Les couleurs ${primary_colors} recouvrent OBLIGATOIREMENT entre 40% et 60% de la surface laterale du vehicule. Par exemple : toute la moitie basse du vehicule est recouverte OU toute la partie arriere depuis les portes. La zone couverte forme un bloc VISIBLE et CLAIR aux couleurs ${primary_colors}. Le reste de la carrosserie (40 a 60% restant) DOIT rester dans la couleur d'origine du vehicule, SANS aucun covering. Le nom de marque, slogan et coordonnees sont integres dans la zone couverte.`,
         'Full cover': `FULL COVER (Total covering) : Les couleurs ${primary_colors} recouvrent la TOTALITE de la carrosserie visible (capot, flancs, portes, hayon) SAUF les vitres et les pare-chocs. Le vehicule entier est transforme aux couleurs ${primary_colors}. Le nom, slogan et coordonnees sont integres dans le design global.`
     };
 
     let logoInstruction = 'Pas de logo fourni. Utilise une typographie soignee et elegante pour afficher le nom de marque sur le vehicule.';
     if (logoFile) {
         if (logoUrl) {
-            logoInstruction = 'Logo fourni : OUI. Le logo DOIT apparaitre sur l\'image, bien visible et fidele a l\'original. Place le logo sur le vehicule de maniere professionnelle (sur la portiere, le capot ou le flanc). Ne modifie PAS le logo. REPRODUIS-LE A L\'IDENTIQUE.';
+            logoInstruction = 'Logo fourni : OUI. Le logo DOIT OBLIGATOIREMENT apparaitre sur l\'image. C\'est une exigence du client. Place le logo bien visible sur le flanc lateral du vehicule (portiere ou panneau lateral). Le logo doit etre reproduit A L\'IDENTIQUE, sans modification, sans deformation. Si le logo n\'est pas visible sur l\'image, le resultat sera refuse.';
         } else {
             logoInstruction = 'Logo fourni mais echec upload. Utilise une typographie soignee pour le nom de marque a la place du logo.';
         }

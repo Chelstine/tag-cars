@@ -372,3 +372,37 @@ button[type="submit"]:hover {
         padding: 25px;
     }
 }
+
+/* Progress bar */
+.progress-bar-container {
+    width: 100%;
+    max-width: 400px;
+    height: 8px;
+    background: rgba(212, 175, 55, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px auto 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #d4af37, #e8c84a, #d4af37);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.loading-step {
+    font-size: 0.8rem;
+    color: #d4af37;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 0;
+}
