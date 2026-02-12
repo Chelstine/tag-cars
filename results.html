@@ -77,18 +77,18 @@
         .result-item-image {
             position: relative;
             cursor: pointer;
-            overflow: hidden;
         }
 
         .result-item-image img {
             width: 100%;
             height: auto;
             display: block;
+            object-fit: contain;
             transition: transform 0.3s;
         }
 
         .result-item-image:hover img {
-            transform: scale(1.03);
+            transform: scale(1.02);
         }
 
         .result-item-image .zoom-hint {
@@ -193,8 +193,10 @@
         }
 
         .lightbox-image {
-            max-width: 90vw;
-            max-height: 80vh;
+            max-width: 95vw;
+            max-height: 85vh;
+            width: auto;
+            height: auto;
             border-radius: 8px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             object-fit: contain;
