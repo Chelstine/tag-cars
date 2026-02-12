@@ -59,13 +59,15 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
         console.log('[LOGO] Upload response (raw):', JSON.stringify(uploadData, null, 2));
     }
 
-    if (!uploadResponse.ok || uploadData.code !== 200) {
+    if (!uploadResponse.ok || (uploadData.code && uploadData.code !== 200)) {
         throw new Error(`Logo upload failed: ${uploadData.msg || JSON.stringify(uploadData)}`);
     }
 
-    const fileUrl = uploadData.data?.fileUrl;
+    // API returns fileUrl or downloadUrl at different levels
+    const d = uploadData.data || uploadData;
+    const fileUrl = d.fileUrl || d.downloadUrl || d.url;
     if (!fileUrl) {
-        throw new Error(`Logo upload returned no fileUrl: ${JSON.stringify(uploadData.data)}`);
+        throw new Error(`Logo upload returned no URL: ${JSON.stringify(d)}`);
     }
     return fileUrl;
 }
