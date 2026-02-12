@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Covering</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="container">
+        <header>
+            <div class="logo">LUXE COVERING</div>
+            <h1>Studio de Design IA</h1>
+            <p>Créez des concepts de covering de véhicule ultra-réalistes et professionnels.</p>
+        </header>
+
+        <main>
+            <form id="designForm">
+                <section class="form-section">
+                    <h2><span class="step-number">1</span> Contexte du Véhicule</h2>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label for="vehicle_type">Modèle du Véhicule</label>
+                            <input type="text" id="vehicle_type" placeholder="Ex: Mercedes Sprinter 2024" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_category">Catégorie</label>
+                            <select id="vehicle_category" required>
+                                <option value="Voiture">Voiture</option>
+                                <option value="Petite camionnette">Petite camionnette</option>
+                                <option value="Moyenne camionnette">Moyenne camionnette</option>
+                                <option value="Grande camionnette">Grande camionnette</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label for="vehicle_view">Vue à représenter</label>
+                            <select id="vehicle_view" required>
+                                <option value="Vue latérale (profil)">Vue latérale (profil)</option>
+                                <option value="Vue 3/4 avant">Vue 3/4 avant</option>
+                                <option value="Vue 3/4 arrière">Vue 3/4 arrière</option>
+                                <option value="Vue arrière">Vue arrière</option>
+                                <option value="Vue avant">Vue avant</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="coverage_type">Type de Recouvrement</label>
+                            <select id="coverage_type" required>
+                                <option value="Semi-cover">Semi-cover</option>
+                                <option value="Full cover">Full cover</option>
+                                <option value="Marking">Marquage simple (Lettrage)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="coverage_zones">Zones à couvrir / Masquer</label>
+                        <input type="text" id="coverage_zones" placeholder="Ex: Tout sauf les vitres et pare-chocs">
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2><span class="step-number">2</span> Marque & Message</h2>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label for="brand_name">Nom de Marque</label>
+                            <input type="text" id="brand_name" placeholder="Ex: TechSolutions" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="industry">Secteur d'activité</label>
+                            <input type="text" id="industry" placeholder="Ex: Plomberie, Tech, Livraison...">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="main_text">Slogan / Texte Principal</label>
+                        <input type="text" id="main_text" placeholder="Ex: Installation & Dépannage 24/7">
+                    </div>
+                    <div class="input-group">
+                        <label for="key_info">Informations Clés (Tél, Site...)</label>
+                        <textarea id="key_info" rows="2" placeholder="Ex: 06 12 34 56 78 - www.monsite.com"></textarea>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h2><span class="step-number">3</span> Style & Design</h2>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label for="style">Style Demandé</label>
+                            <input type="text" id="style" placeholder="Ex: Moderne, Minimaliste, Géométrique, Agressif" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="primary_colors">Couleurs Principales</label>
+                            <input type="text" id="primary_colors" placeholder="Ex: Bleu Marine, Blanc et Argent" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="logo_instruction">Instructions Logo</label>
+                        <textarea id="logo_instruction" rows="2" placeholder="Décrivez le logo ou indiquez 'Utiliser le texte comme logo'"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="constraints">Contraintes & Éléments à éviter</label>
+                        <textarea id="constraints" rows="2" placeholder="Ex: Pas de photos réalistes, pas de dégradés trop complexes..."></textarea>
+                    </div>
+                </section>
+
+                <div class="actions">
+                    <button type="submit" id="generateBtn">
+                        <span class="btn-text">Générer le Design</span>
+                        <div class="btn-shine"></div>
+                    </button>
+                    <div id="loadingIndicator" class="hidden">
+                        <div class="spinner"></div>
+                        <p>L'IA conçoit votre covering...</p>
+                    </div>
+                </div>
+            </form>
+
+            <section id="resultSection" class="hidden">
+                <h2>Vos Propositions</h2>
+                <div id="imageGrid" class="image-grid">
+                    <!-- Images will be injected here -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
