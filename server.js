@@ -86,7 +86,7 @@ function buildSinglePrompt(coveringType, vehicle_type, vehicle_category, brand_n
     let logoInstruction = 'Pas de logo fourni. Utilise une typographie soignee et elegante pour afficher le nom de marque sur le vehicule.';
     if (logoFile) {
         if (logoUrl) {
-            logoInstruction = 'Logo fourni : OUI. Le logo DOIT OBLIGATOIREMENT apparaitre sur l\'image. C\'est une exigence du client. Place le logo bien visible sur le flanc lateral du vehicule (portiere ou panneau lateral). Le logo doit etre reproduit A L\'IDENTIQUE, sans modification, sans deformation. Si le logo n\'est pas visible sur l\'image, le resultat sera refuse.';
+            logoInstruction = 'Logo fourni : OUI. Le logo DOIT OBLIGATOIREMENT apparaitre sur l\'image, c\'est une EXIGENCE ABSOLUE du client. Place le logo bien visible et en GRANDE TAILLE sur le flanc lateral du vehicule (portiere ou panneau lateral). Le logo doit etre reproduit A L\'IDENTIQUE : memes couleurs, memes formes, memes proportions, sans AUCUNE modification ni deformation. Le logo est aussi IMPORTANT que les textes. Si le logo n\'est pas visible et identifiable sur l\'image finale, le resultat sera REFUSE et REJETE. Integre le logo comme element central du design du covering.';
         } else {
             logoInstruction = 'Logo fourni mais echec upload. Utilise une typographie soignee pour le nom de marque a la place du logo.';
         }
@@ -103,11 +103,13 @@ ${coveringDesc[coveringType] || coveringDesc['Standard']}
 COULEURS OBLIGATOIRES DU DESIGN : ${primary_colors}
 Ces couleurs doivent etre utilisees pour tout le covering/lettrage. C'est le choix du client.
 
-TEXTES A AFFICHER (ne rien inventer) :
-- Marque : "${brand_name}"
-- Slogan : "${main_text}"
-- Infos : "${key_info}"
+TEXTES A AFFICHER (STRICTEMENT - NE RIEN INVENTER, NE RIEN OUBLIER) :
+- Marque : "${brand_name}" ${brand_name ? '-> DOIT apparaitre sur le vehicule' : '-> non fourni, ne pas afficher'}
+- Slogan : "${main_text}" ${main_text ? '-> DOIT apparaitre sur le vehicule' : '-> non fourni, ne pas afficher'}
+- Infos : "${key_info}" ${key_info ? '-> DOIT apparaitre sur le vehicule' : '-> non fourni, ne pas afficher'}
 - Secteur : ${industry}
+REGLES TEXTE : Affiche TOUS les textes fournis ci-dessus, AUCUNE exception. N'invente AUCUN texte, AUCUN numero de telephone, AUCUNE adresse, AUCUN slogan qui ne figure pas ci-dessus. Si un champ est vide, ne l'affiche pas. Chaque texte fourni DOIT etre LISIBLE et CORRECT sur l'image finale.
+
 Style : ${style}
 
 LOGO : ${logoInstruction}
@@ -120,6 +122,9 @@ REGLES STRICTES :
 3. Pas de collage, pas de mosaique
 4. Le vehicule doit etre ENTIER et COMPLET dans l'image. RIEN ne doit etre coupe : on doit voir le pare-chocs avant, le pare-chocs arriere, le toit et les roues en entier. NE COUPE JAMAIS une partie du vehicule. Laisse des MARGES genereuses autour du vehicule.
 5. Rendu photorealiste, ratio 1:1
+6. TOUS les textes fournis (marque, slogan, infos) doivent etre presents et lisibles sur le vehicule. N'en oublie AUCUN.
+7. N'ajoute AUCUN texte, AUCUN mot, AUCUN numero qui n'a pas ete fourni par le client. ZERO invention.
+8. Si un logo a ete fourni, il DOIT apparaitre sur le vehicule, bien visible, en taille suffisante, reproduit A L'IDENTIQUE. Le logo est OBLIGATOIRE et NON NEGOCIABLE. Ne le remplace PAS par du texte, ne l'omets PAS, ne le deforme PAS.
 `;
 }
 
