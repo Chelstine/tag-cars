@@ -81,8 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || 'Erreur lors de la génération');
             }
 
-            if (data.images && data.images.length > 0) {
+            if (data.images && data.images.filter(Boolean).length > 0) {
                 sessionStorage.setItem('generatedImages', JSON.stringify(data.images));
+                if (data.errors) {
+                    sessionStorage.setItem('generationErrors', JSON.stringify(data.errors));
+                }
                 if (data.logoError) {
                     sessionStorage.setItem('logoWarning', data.logoError);
                 } else {

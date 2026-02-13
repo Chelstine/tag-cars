@@ -128,8 +128,8 @@ REGLES STRICTES :
 `;
 }
 
-// Submit a generation request and poll until result
-async function generateSingleImage(prompt, logoUrl, apiKey, apiBaseUrl, label) {
+// Submit a generation request to KIE API and get taskId
+async function submitGeneration(prompt, logoUrl, apiKey, apiBaseUrl, label) {
     console.log(`[${label}] Sending generation request...`);
 
     const requestBody = {
@@ -160,20 +160,24 @@ async function generateSingleImage(prompt, logoUrl, apiKey, apiBaseUrl, label) {
     const taskId = genData.data?.taskId || genData.taskId;
 
     if (!taskId) {
-        // Check for direct/sync images
         if (genData.data && Array.isArray(genData.data) && genData.data[0]?.url) {
-            return genData.data[0].url;
+            return { directUrl: genData.data[0].url };
         }
         if (genData.data?.url) {
-            return genData.data.url;
+            return { directUrl: genData.data.url };
         }
         throw new Error(`No taskId for ${label}: ${JSON.stringify(genData)}`);
     }
 
-    // Poll for results (60 attempts x 5s = up to 5 minutes)
-    console.log(`[${label}] Task ID: ${taskId}. Polling...`);
+    return { taskId };
+}
+
+// Poll a taskId until result, with stuck detection
+async function pollForResult(taskId, apiKey, apiBaseUrl, label, maxAttempts) {
+    console.log(`[${label}] Task ID: ${taskId}. Polling (max ${maxAttempts})...`);
     let attempts = 0;
-    const maxAttempts = 60;
+    let zeroProgressCount = 0;
+    const STUCK_THRESHOLD = 15; // 15 polls at 0% = ~75s stuck
 
     while (attempts < maxAttempts) {
         await new Promise(r => setTimeout(r, 5000));
@@ -191,7 +195,7 @@ async function generateSingleImage(prompt, logoUrl, apiKey, apiBaseUrl, label) {
 
         const statusData = await statusResponse.json();
         const successFlag = statusData?.data?.successFlag;
-        const progress = statusData?.data?.progress || "0";
+        const progress = parseFloat(statusData?.data?.progress || "0");
         console.log(`[${label}] Poll ${attempts + 1}/${maxAttempts}: flag=${successFlag}, progress=${progress}`);
 
         if (statusData.code === 200 && statusData.data && successFlag === 1) {
@@ -209,10 +213,41 @@ async function generateSingleImage(prompt, logoUrl, apiKey, apiBaseUrl, label) {
             throw new Error(`${label} failed: ${failureReason}`);
         }
 
+        // Stuck detection: if progress stays at 0 for too long, abort to retry
+        if (progress === 0) {
+            zeroProgressCount++;
+            if (zeroProgressCount >= STUCK_THRESHOLD) {
+                console.warn(`[${label}] STUCK at 0% for ${zeroProgressCount} polls (~${zeroProgressCount * 5}s). Aborting to retry.`);
+                throw new Error('STUCK');
+            }
+        } else {
+            zeroProgressCount = 0;
+        }
+
         attempts++;
     }
 
-    throw new Error(`${label} timed out after 5 minutes`);
+    throw new Error(`${label} timed out after polling`);
+}
+
+// Full generation with automatic retry if task gets stuck at 0%
+async function generateSingleImage(prompt, logoUrl, apiKey, apiBaseUrl, label) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+            const result = await submitGeneration(prompt, logoUrl, apiKey, apiBaseUrl, label);
+            if (result.directUrl) return result.directUrl;
+
+            const imageUrl = await pollForResult(result.taskId, apiKey, apiBaseUrl, label, 40);
+            return imageUrl;
+        } catch (err) {
+            if (err.message === 'STUCK' && attempt === 1) {
+                console.warn(`[${label}] Task stuck at 0%. RETRYING with new request (attempt 2/2)...`);
+                continue;
+            }
+            throw err;
+        }
+    }
+    throw new Error(`${label} failed after 2 attempts`);
 }
 
 app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
@@ -271,18 +306,30 @@ app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('Keep-Alive', 'timeout=600');
 
-        // Launch ALL 3 generations in parallel for speed
-        const [chosenImage, altImage1, altImage2] = await Promise.all([
+        // Launch ALL 3 generations in parallel - use allSettled so partial results still work
+        const results = await Promise.allSettled([
             generateSingleImage(prompt1, logoUrl, KIE_API_KEY, API_BASE_URL, chosenType),
             generateSingleImage(prompt2, logoUrl, KIE_API_KEY, API_BASE_URL, otherTypes[0]),
             generateSingleImage(prompt3, logoUrl, KIE_API_KEY, API_BASE_URL, otherTypes[1])
         ]);
 
-        console.log(`=== All 3 generations complete ===`);
+        const images = results.map(r => r.status === 'fulfilled' ? r.value : null);
+        const errors = results.map(r => r.status === 'rejected' ? r.reason.message : null);
+        const successCount = images.filter(Boolean).length;
+
+        console.log(`=== Generations done: ${successCount}/3 succeeded ===`);
+        results.forEach((r, i) => {
+            if (r.status === 'rejected') console.error(`[FAIL] ${[chosenType, ...otherTypes][i]}: ${r.reason.message}`);
+        });
+
+        if (successCount === 0) {
+            throw new Error('Les 3 generations ont echoue. Veuillez reessayer.');
+        }
 
         return res.json({
             success: true,
-            images: [chosenImage, altImage1, altImage2],
+            images: images,
+            errors: errors,
             logoUsed: !!logoUrl,
             logoError: logoUploadError || null,
             chosenType: chosenType,

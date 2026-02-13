@@ -377,6 +377,7 @@
 
             // Get images from sessionStorage
             const images = JSON.parse(sessionStorage.getItem('generatedImages') || '[]');
+            const generationErrors = JSON.parse(sessionStorage.getItem('generationErrors') || '[]');
             const logoWarning = sessionStorage.getItem('logoWarning');
             const logoUsed = sessionStorage.getItem('logoUsed');
 
@@ -388,7 +389,7 @@
                 grid.parentNode.insertBefore(warn, grid);
             }
 
-            if (images.length === 0) {
+            if (images.filter(Boolean).length === 0) {
                 grid.classList.add('hidden');
                 noResults.classList.remove('hidden');
                 return;
@@ -436,8 +437,14 @@
 
             const chosenRow = document.createElement('div');
             chosenRow.className = 'chosen-row';
-            // First image = chosen type (displayed large)
-            chosenRow.appendChild(createCard(images[0], 0, chosenType || 'Proposition 1'));
+            if (images[0]) {
+                chosenRow.appendChild(createCard(images[0], 0, chosenType || 'Proposition 1'));
+            } else {
+                const failMsg = document.createElement('div');
+                failMsg.style.cssText = 'background:#fff3cd;color:#856404;padding:20px;border-radius:12px;text-align:center;font-size:0.95rem;';
+                failMsg.textContent = 'La generation du ' + chosenType + ' a echoue. Relancez une generation.';
+                chosenRow.appendChild(failMsg);
+            }
             grid.appendChild(chosenRow);
 
             // --- ALTERNATIVES: 2nd and 3rd images side by side ---
@@ -454,7 +461,16 @@
                     if (i === 1 && otherTypes[0]) typeLabel = otherTypes[0];
                     else if (i === 2 && otherTypes[1]) typeLabel = otherTypes[1];
                     else typeLabel = 'Proposition ' + (i + 1);
-                    altRow.appendChild(createCard(images[i], i, typeLabel));
+
+                    if (images[i]) {
+                        altRow.appendChild(createCard(images[i], i, typeLabel));
+                    } else {
+                        const failMsg = document.createElement('div');
+                        failMsg.className = 'result-item';
+                        failMsg.style.cssText = 'background:#fff3cd;color:#856404;padding:30px;text-align:center;font-size:0.95rem;display:flex;align-items:center;justify-content:center;min-height:200px;';
+                        failMsg.textContent = 'Generation du ' + typeLabel + ' echouee.';
+                        altRow.appendChild(failMsg);
+                    }
                 }
                 grid.appendChild(altRow);
             }
