@@ -12,10 +12,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Multer config for logo upload (in memory)
+// Increase server timeout to 10 minutes for long generation requests
+const server = app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+server.timeout = 600000;
+server.keepAliveTimeout = 600000;
+server.headersTimeout = 610000;
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Helper: Upload logo to Kie.ai File Upload API and get a public URL
 async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
     const base64Raw = fileBuffer.toString('base64');
     const ext = path.extname(fileName).slice(1).toLowerCase() || 'png';
@@ -24,7 +30,6 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
 
     console.log(`[LOGO] Uploading to Kie.ai (${fileName}, ${(fileBuffer.length / 1024).toFixed(1)} KB, ext=${ext})...`);
 
-    // Try with data URL format first
     let uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
         method: 'POST',
         headers: {
@@ -40,7 +45,6 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
     let uploadData = await uploadResponse.json();
     console.log('[LOGO] Upload response (dataUrl):', JSON.stringify(uploadData, null, 2));
 
-    // If data URL format failed, try raw base64
     if (!uploadResponse.ok || uploadData.code !== 200) {
         console.log('[LOGO] Data URL format failed, trying raw base64...');
         uploadResponse = await fetch('https://kieai.redpandaai.co/api/file-base64-upload', {
@@ -72,7 +76,6 @@ async function uploadLogoToKie(fileBuffer, fileName, apiKey) {
     return fileUrl;
 }
 
-// Build a prompt for a SINGLE covering type - 1 vehicle, 1 image
 function buildSinglePrompt(coveringType, vehicle_type, vehicle_category, brand_name, main_text, key_info, industry, style, primary_colors, constraints, logoFile, logoUrl) {
     const coveringDesc = {
         'Standard': `STANDARD (Lettrage / Marquage simple) : Le vehicule GARDE sa couleur d'origine intacte. Seuls le nom de marque, le slogan, les coordonnees et le logo sont appliques en lettrage vinyle decoupe sur le flanc lateral (PAS sur les vitres). Aucun fond colore, aucun covering de surface. Le lettrage utilise les couleurs ${primary_colors}. La peinture d'origine du vehicule reste 100% visible.`,
@@ -254,16 +257,18 @@ app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
         const prompt2 = buildSinglePrompt(otherTypes[0], ...promptArgs);
         const prompt3 = buildSinglePrompt(otherTypes[1], ...promptArgs);
 
-        console.log(`=== Starting 3 separate generations ===`);
+        console.log(`=== Starting 3 generations in parallel ===`);
         console.log(`1. ${chosenType} (chosen)`);
         console.log(`2. ${otherTypes[0]} (alternative)`);
         console.log(`3. ${otherTypes[1]} (alternative)`);
 
-        // Step 1: Generate the CHOSEN type first
-        const chosenImage = await generateSingleImage(prompt1, logoUrl, KIE_API_KEY, API_BASE_URL, chosenType);
+        // Keep connection alive during long generation
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('Keep-Alive', 'timeout=600');
 
-        // Step 2: Generate the 2 alternatives in parallel
-        const [altImage1, altImage2] = await Promise.all([
+        // Launch ALL 3 generations in parallel for speed
+        const [chosenImage, altImage1, altImage2] = await Promise.all([
+            generateSingleImage(prompt1, logoUrl, KIE_API_KEY, API_BASE_URL, chosenType),
             generateSingleImage(prompt2, logoUrl, KIE_API_KEY, API_BASE_URL, otherTypes[0]),
             generateSingleImage(prompt3, logoUrl, KIE_API_KEY, API_BASE_URL, otherTypes[1])
         ]);
@@ -285,8 +290,4 @@ app.post('/api/generate', upload.single('logo_file'), async (req, res) => {
             res.status(500).json({ success: false, error: error.message || "Internal Server Error" });
         }
     }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
 });
