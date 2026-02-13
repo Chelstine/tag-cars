@@ -118,7 +118,7 @@ REGLES STRICTES :
 1. UNE SEULE IMAGE, UN SEUL vehicule "${vehicle_type}"
 2. Profil lateral uniquement, pas de 3/4, pas de face
 3. Pas de collage, pas de mosaique
-4. Vehicule complet non coupe
+4. Le vehicule doit etre ENTIER et COMPLET dans l'image. RIEN ne doit etre coupe : on doit voir le pare-chocs avant, le pare-chocs arriere, le toit et les roues en entier. NE COUPE JAMAIS une partie du vehicule. Laisse des MARGES genereuses autour du vehicule.
 5. Rendu photorealiste, ratio 1:1
 `;
 }
